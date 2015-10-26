@@ -1,12 +1,16 @@
 {
   "name": "babel-plugin-react-cssmoduleify",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Babel plugin to transform traditional classNames to CSS Modules",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "babel index.js -o lib/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "files": [
+    "lib",
+    "index.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/walmartreact/babel-plugin-react-cssmoduleify.git"
