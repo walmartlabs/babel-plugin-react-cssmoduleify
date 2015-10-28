@@ -4,7 +4,8 @@
   "description": "Babel plugin to transform traditional classNames to CSS Modules",
   "main": "lib/index.js",
   "scripts": {
-    "prepublish": "babel index.js -o lib/index.js",
+    "build": "babel index.js -o lib/index.js",
+    "prepublish": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [

@@ -6,6 +6,13 @@ components that still use traditional CSS classNames and global CSS. To allow
 for teams to take advantage of CSS Modules, this babel plugin is used to convert
 all global styles into CSS Modules.
 
+Please note this is a work in progress and does not account for all JavaScript
+constructs yet. It is undergoing the “trial-by-fire” support methodology. If we
+detect a currently-unsupported construct we will print a warning to the console
+with a link to report it at our issue tracker. Please include as much code as
+possible to make it easier for us to add support.
+
+
 ## Usage
 
 * `npm install --save babel-plugin-react-cssmoduleify`
@@ -32,6 +39,11 @@ all global styles into CSS Modules.
 * `cssmodule`: path from `process.cwd()` to global CSS file
 
 ## Example
+
+This currently works on only the babel compiled JavaScript and not the original
+ source. Adding support the original source would likely be fairly trivial. The
+ following example demonstrates the modifications on the babel output of a
+ React component.
 
 ### Before
 
