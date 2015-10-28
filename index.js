@@ -334,8 +334,24 @@ export default function ({Plugin, parse, types: t}) {
         ) return;
 
         const {properties} = node.arguments[1];
-        if (!properties) return;
-        node.arguments[1].properties = properties.map(prop => handleProp(prop, node, scope, file));
+        if (properties) {
+          node.arguments[1].properties = properties.map(prop => handleProp(prop, node, scope, file));
+          return;
+        } else {
+          // an ObjectSpreadProperty was used in the source
+          if (
+            node.arguments[1].type === 'CallExpression' &&
+            node.arguments[1].callee.name.indexOf('extends') !== -1
+          ) {
+            node.arguments[1].arguments = node.arguments[1].arguments.map(prop => {
+              if (prop.type === 'ObjectExpression') {
+                prop.properties = prop.properties.map(prop => handleProp(prop, node, scope, file));
+              }
+
+              return prop;
+            });
+          }
+        }
       },
 
       Program: {
