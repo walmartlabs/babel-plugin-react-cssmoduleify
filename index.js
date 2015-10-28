@@ -98,9 +98,14 @@ export default function ({Plugin, parse, types: t}) {
   };
 
   const convertStringKeysToComputedProperties = (node) => {
-    // return node;
-
     node.properties.forEach(p => {
+      // ensure we're idempotent
+      if (
+        p.key.type === 'MemberExpression' &&
+        p.object === cssModuleId
+      ) {
+        return;
+      }
       p.key = t.memberExpression(
         cssModuleId,
         t.literal(p.key.value),
@@ -114,7 +119,11 @@ export default function ({Plugin, parse, types: t}) {
   const mutateClassnamesCall = (node, scope) => {
     node.arguments = node.arguments.map(v => {
       if (v.type === 'Identifier') {
-        const bindings = scope.bindings[v.name];
+        let bindings;
+        while (!(bindings = scope.bindings[v.name]) && scope.parent) {
+          scope = scope.parent;
+        }
+
         if (!bindings) {
           return t.memberExpression(
             cssModuleId,
