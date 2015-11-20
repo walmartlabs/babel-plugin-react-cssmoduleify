@@ -3,6 +3,7 @@
   "version": "0.9.2",
   "description": "Babel plugin to transform traditional classNames to CSS Modules",
   "main": "lib/index.js",
+  "jsnext:main": "index.js",
   "scripts": {
     "build": "babel index.js -o lib/index.js",
     "prepublish": "npm run build",

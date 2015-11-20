@@ -299,8 +299,34 @@ export default function ({Plugin, parse, types: t}) {
         }, node, scope, file).value;
 
       return prop;
-    }
-    else {
+    } else if (prop.value.type === 'CallExpression') {
+      // simplistic `myIdentifier.join(' ')` detection
+      // transforms to `myIdentifier.map(a => _cssmodules[a]).join(' ')`
+      if (
+        // TODO: could lookup the callee.object value and follow the Identifier
+        // or ensure it is an ArrayExpresion
+        prop.value.callee.property.name === 'join' &&
+        prop.value.arguments[0].value === ' '
+      ) {
+        prop.value = t.callExpression(
+          t.memberExpression(
+            t.callExpression(
+              t.memberExpression(
+                prop.value.callee.object,
+                t.identifier('map')
+              ),
+              [t.arrowFunctionExpression(
+                [t.identifier('a')],
+                t.memberExpression(cssModuleId, t.identifier('a'), true)
+              )]
+            ),
+            prop.value.callee.property
+          ),
+          prop.value.arguments
+        );
+      }
+      return prop;
+    } else {
       if (
         prop.value.type === 'MemberExpression' ||
         prop.value.type === 'CallExpression' ||
