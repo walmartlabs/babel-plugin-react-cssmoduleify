@@ -102,7 +102,8 @@ export default function ({Plugin, parse, types: t}) {
       // ensure we're idempotent
       if (
         p.key.type === 'MemberExpression' &&
-        p.object === cssModuleId
+        p.object === cssModuleId ||
+        !p.key.value
       ) {
         return;
       }
