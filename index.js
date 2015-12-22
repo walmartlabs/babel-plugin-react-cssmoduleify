@@ -69,32 +69,38 @@ export default function ({Plugin, parse, types: t}) {
     }
   };
 
-  const isClassnamesIsh = (node) => {
+  const isClassnames = (node, scope) => {
     const reClassnames = /classnames/i;
 
     if (node.type !== 'CallExpression') {
       return false;
     }
 
-    if (node.callee.type === 'Identifier') {
-      return reClassnames.test(node.callee.name);
+    const identifierName = (
+      node.callee.type === 'Identifier' ? node.callee.name
+      : node.callee.object ? node.callee.object.name
+      : node.callee.type === 'SequenceExpression' ? node.callee.expressions[1].object.name
+      : 'TODO'
+    );
+
+    if (!identifierName || identifierName === 'TODO') {
+      return false;
     }
 
-    let thing = node.callee;
-
-    // babel does this stuff
-    if (node.callee.type === 'SequenceExpression') {
-      if (node.callee.expressions.length !== 2) return false;
-      if (node.callee.expressions[0].value !== 0) return false;
-
-      thing = node.callee.expressions[1];
+    const definition = scope.getBinding(identifierName);
+    // follow the variable declaration to a require
+    if (definition.path.node.type === 'VariableDeclarator') {
+      const {init} = definition.path.node;
+      if (init.type !== 'CallExpression') {
+        return false;
+      }
+      if (/require|_interopRequireDefault/.test(init.callee.name)) {
+        return reClassnames.test(init.arguments[0].name);
+      }
     }
 
-    if (thing.type === 'Identifier') {
-      return reClassnames.test(thing.name);
-    } else if (thing.type === 'MemberExpression') {
-      return reClassnames.test(thing.object.name);
-    }
+    // TODO: track `import` statements
+    return false;
   };
 
   const convertStringKeysToComputedProperties = (node) => {
@@ -256,7 +262,8 @@ export default function ({Plugin, parse, types: t}) {
   }
 
   const handleProp = (prop, node, scope, file) => {
-    if (prop.key.name !== 'className') return prop;
+    // pick up className, activeClassName, hoverClassName, etc
+    if (!/classname/i.test(prop.key.name)) return prop;
 
     if (prop.value.type === 'Identifier') {
       const binding = scope.bindings[prop.value.name];
@@ -270,7 +277,7 @@ export default function ({Plugin, parse, types: t}) {
       if (path.node.init.value) {
         mutateStringPropertyToCSSModule(prop);
       }
-      else if (isClassnamesIsh(path.node.init)) {
+      else if (isClassnames(path.node.init, scope)) {
         mutateClassnamesCall(path.node.init, scope);
       }
 
@@ -281,12 +288,11 @@ export default function ({Plugin, parse, types: t}) {
     if (prop.value.value) {
       mutateStringPropertyToCSSModule(prop);
     }
-    else if (isClassnamesIsh(prop.value)) {
+    else if (isClassnames(prop.value, scope)) {
       mutateClassnamesCall(prop.value, scope);
     }
     else if (prop.value.type === 'BinaryExpression') {
       return handleBinaryExpressionProp(prop, node, scope, file);
-      return prop;
     }
     else if (prop.value.type === 'ConditionalExpression') {
       prop.value.consequent = handleProp(
