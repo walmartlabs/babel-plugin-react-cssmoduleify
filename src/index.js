@@ -67,6 +67,9 @@ export default ({types: t}) => {
           spacedTemplateElements(values.length + 1),
           values.map((v) => t.memberExpression(cssmodule, t.stringLiteral(v), true))
       );
+    } else if (t.isIdentifier(value)) {
+      // TODO: need to validate what type of node this identifier refers to
+      return t.memberExpression(cssmodule, value.node, true);
     }
   };
 
@@ -78,7 +81,9 @@ export default ({types: t}) => {
         type: "JSXExpressionContainer",
         expression: computeClassName(value, cssmodule)
       });
-    } else if (t.isCallExpression(value)) {
+    } else if (t.isIdentifier(value)) {
+      return value.replaceWith(computeClassName(value, cssmodule));
+    }else if (t.isCallExpression(value)) {
       if (isArrayJoin(value)) {
         return replaceArrayJoinElements(value, cssmodule);
       } else {
