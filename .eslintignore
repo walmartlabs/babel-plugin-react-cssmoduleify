@@ -1,3 +1,6 @@
-test/*/actual.js
-test/*/expected.js
+test/fixtures/*/*/actual.js
+test/fixtures/*/*/expected.js
+lib
+
+index.js
 
