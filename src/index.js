@@ -1,3 +1,4 @@
+/* eslint no-use-before-define: 0, no-extra-parens: 0 */
 type StateOpts = {
   cssmodule: string;
   modules: "commonjs"|"es6";
@@ -29,23 +30,62 @@ export default ({types: t}) => {
         : t.templateElement(templateElementValue(" "), false)
     );
 
-  const updateJSXClassName = (value, cssmodule) => {
+  const isArrayJoin = (path) => {
+    return (
+      t.isCallExpression(path.node) &&
+      t.isMemberExpression(path.node.callee) &&
+      t.isIdentifier(path.node.callee.property, {name: "join"}) && (
+        t.isArrayExpression(path.node.callee.object) ||
+        t.isIdentifier(path.node.callee.object) // TODO: resolve identifier
+      )
+    );
+  };
+
+  const resolve = (path) => {
+    // if it’s not an identifier we already have what we need
+    if (!t.isIdentifier(path.node)) {
+      return path;
+    }
+    throw new Error("TODO: resolve identifier");
+  };
+
+  const replaceArrayJoinElements = (path, cssmodule) => {
+    const arrayExpressionPath = resolve(path.get("callee").get("object"));
+
+    for (let i = 0; i < arrayExpressionPath.node.elements.length; i++) {
+      const element = arrayExpressionPath.get("elements", i)[i];
+      element.replaceWith(computeClassName(element, cssmodule));
+    }
+  };
+
+  const computeClassName = (value, cssmodule) => {
     if (t.isStringLiteral(value)) {
       const values = value.node.value.split(" ");
-      return value.replaceWith(
-        { type: "JSXExpressionContainer",
-          expression: t.templateLiteral(
-            spacedTemplateElements(values.length + 1),
-            values.map((v) => t.memberExpression(
-              cssmodule,
-              t.stringLiteral(v),
-              true
-            ))
-          )
-        }
+      return values.length === 1
+        ? t.memberExpression(cssmodule, t.stringLiteral(values[0]), true)
+        : t.templateLiteral(
+          spacedTemplateElements(values.length + 1),
+          values.map((v) => t.memberExpression(cssmodule, t.stringLiteral(v), true))
       );
+    }
+  };
+
+  const updateJSXClassName = (value, cssmodule) => {
+    if (t.isJSXExpressionContainer(value)) {
+      return updateJSXClassName(value.get("expression"), cssmodule);
+    } else if (t.isStringLiteral(value)) {
+      return value.replaceWith({
+        type: "JSXExpressionContainer",
+        expression: computeClassName(value, cssmodule)
+      });
+    } else if (t.isCallExpression(value)) {
+      if (isArrayJoin(value)) {
+        return replaceArrayJoinElements(value, cssmodule);
+      } else {
+        console.log("TODO: updateJSXClassName for non [].join(\" \") %s", value.type);
+      }
     } else {
-      console.log("TODO: updateJSXClassName");
+      console.log("TODO: updateJSXClassName for %s", value.type);
     }
   };
 

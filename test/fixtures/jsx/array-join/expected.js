@@ -3,10 +3,11 @@ import React from "react";
 
 export default class extends React.Component {
   render() {
-    return <div className={_cssmodule["base"]}>
+    return <div className={[_cssmodule["hello"], _cssmodule["world"]].join(" ")}>
       Base test.
     </div>;
   }
 };
+
 
 
