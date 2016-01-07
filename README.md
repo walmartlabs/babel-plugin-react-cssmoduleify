@@ -1,5 +1,7 @@
 # babel-plugin-react-cssmoduleify
 
+[![Build Status](https://travis-ci.org/walmartreact/babel-plugin-react-cssmoduleify.svg)](https://travis-ci.org/walmartreact/babel-plugin-react-cssmoduleify)
+
 For those who have tasted [CSS Modules](https://github.com/css-modules/css-modules)
 it is hard to imagine life without it. At Walmart we have a large number of core
 components that still use traditional CSS classNames and global CSS. To allow
