@@ -28,7 +28,7 @@ describe("babel-plugin-react-cssmoduleify", () => {
     babel.transform("const x = 1;", BABEL_OPTIONS);
   });
 
-  ["jsx", "createElement"].forEach((type) => {
+  ["jsx", "createElement", "compiled"].forEach((type) => {
     describe(type, () => {
       it("should transform simple literals", test(type)("string"));
       it("should transform multiple-class string literals", test(type)("string-multiple"));

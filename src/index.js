@@ -1,4 +1,10 @@
-/* eslint no-use-before-define: 0, no-extra-parens: 0 */
+/* eslint no-extra-parens: 0 */
+type Path<node> = {
+  node: node;
+  scope: any;
+  matchesPattern: (pattern:string) => boolean;
+};
+
 type StateOpts = {
   cssmodule: string;
   modules: "commonjs"|"es6";
@@ -20,7 +26,7 @@ const templateElementValue = (value) => ({raw: value, cooked: value});
 export default ({types: t}) => {
   const ROOT_CSSNAMES_IDENTIFIER = "cssmodule";
 
-  const matchesPatterns = (path, patterns) => (
+  const matchesPatterns = (path:Path<any>, patterns:Array<string>) => (
     !!find(patterns, (pattern) => (
       t.isIdentifier(path.node, { name: pattern }) ||
       path.matchesPattern(pattern)
@@ -37,6 +43,21 @@ export default ({types: t}) => {
         ? t.templateElement(templateElementValue(""), i === count)
         : t.templateElement(templateElementValue(" "), false)
     );
+
+  const computeClassName = (value, cssmodule) => {
+    if (t.isStringLiteral(value)) {
+      const values = value.node.value.split(" ");
+      return values.length === 1
+        ? t.memberExpression(cssmodule, t.stringLiteral(values[0]), true)
+        : t.templateLiteral(
+          spacedTemplateElements(values.length + 1),
+          values.map((v) => t.memberExpression(cssmodule, t.stringLiteral(v), true))
+      );
+    } else if (t.isIdentifier(value)) {
+      // TODO: need to validate what type of node this identifier refers to
+      return t.memberExpression(cssmodule, value.node, true);
+    }
+  };
 
   const isArrayJoin = (path) => {
     return (
@@ -106,21 +127,6 @@ export default ({types: t}) => {
     for (let i = 0; i < arrayExpressionPath.node.elements.length; i++) {
       const element = arrayExpressionPath.get("elements", i)[i];
       element.replaceWith(computeClassName(element, cssmodule));
-    }
-  };
-
-  const computeClassName = (value, cssmodule) => {
-    if (t.isStringLiteral(value)) {
-      const values = value.node.value.split(" ");
-      return values.length === 1
-        ? t.memberExpression(cssmodule, t.stringLiteral(values[0]), true)
-        : t.templateLiteral(
-          spacedTemplateElements(values.length + 1),
-          values.map((v) => t.memberExpression(cssmodule, t.stringLiteral(v), true))
-      );
-    } else if (t.isIdentifier(value)) {
-      // TODO: need to validate what type of node this identifier refers to
-      return t.memberExpression(cssmodule, value.node, true);
     }
   };
 
@@ -217,23 +223,38 @@ export default ({types: t}) => {
       },
 
       CallExpression(path, state) {
-        if (matchesPatterns(path.get("callee"), ["React.createElement"])) {
-          if (!state.cssModuleId) {
-            state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
-          }
+        const isCreateElementCall = matchesPatterns(
+          path.get("callee"),
+          ["React.createElement", "_react2.default.createElement"]
+        );
 
-          path.get("arguments")[1].get("properties").forEach((property) => {
-            if (property.node.key.name === "className") {
-              updateClassName(
-                property.get("value"),
-                state.cssModuleId
-              );
-            }
-          });
+        if (!isCreateElementCall) {
+          return;
         }
+
+        if (!state.cssModuleId) {
+          state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
+        }
+
+        path.get("arguments")[1].get("properties").forEach((property) => {
+          if (property.node.key.name === "className") {
+            updateClassName(
+              property.get("value"),
+              state.cssModuleId
+            );
+          }
+        });
       },
 
       Program: {
+        enter(path, state:State) {
+          // detect if this is likely compiled source
+          if (path.scope.getBinding("_interopRequireDefault")) {
+            state.transformingOutput = true;
+            state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
+          }
+        },
+
         exit(path, state:State) {
           if (state.cssModuleId) {
             const importOpts = {
@@ -244,8 +265,11 @@ export default ({types: t}) => {
             const firstChild = path.get("body")[0];
             const {leadingComments} = firstChild.node;
             delete firstChild.node.leadingComments;
+
+            // currently we’re using the heuristic if the module system is using
+            // commonjs then we'll export as commonjs
             path.get("body")[0].insertBefore(
-              state.opts.modules === "commonjs"
+              state.opts.modules === "commonjs" || state.transformingOutput
                 ? buildRequire(importOpts)
                 : buildImport(importOpts)
             );
