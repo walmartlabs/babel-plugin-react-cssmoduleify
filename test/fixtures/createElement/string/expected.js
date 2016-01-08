@@ -3,9 +3,7 @@ import React from "react";
 
 export default class extends React.Component {
   render() {
-    return <div className={_cssmodule["base"]}>
-      Base test.
-    </div>;
+    return React.createElement("div", { className: _cssmodule["base"] }, "Base test.");
   }
 };
 

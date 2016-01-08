@@ -28,12 +28,16 @@ describe("babel-plugin-react-cssmoduleify", () => {
     babel.transform("const x = 1;", BABEL_OPTIONS);
   });
 
-  it("should transform simple literals", test("jsx")("string"));
-  it("should transform multiple-class string literals", test("jsx")("string-multiple"));
-  it("should transform JSXExpressionContainer values", test("jsx")("string-multiple"));
-  it("should transform *.join(\" \") expressions", test("jsx")("array-join"));
-  it("should transform simple identifier expressions", test("jsx")("identifier"));
-  it("should transform a simple call expression", test("jsx")("call-expression"));
-  it("should transform a classnames call", test("jsx")("classnames"));
+  ["jsx", "createElement"].forEach((type) => {
+    describe(type, () => {
+      it("should transform simple literals", test(type)("string"));
+      it("should transform multiple-class string literals", test(type)("string-multiple"));
+      it("should transform JSXExpressionContainer values", test(type)("string-jsx-expression"));
+      it("should transform *.join(\" \") expressions", test(type)("array-join"));
+      it("should transform simple identifier expressions", test(type)("identifier"));
+      it("should transform a simple call expression", test(type)("call-expression"));
+      it("should transform a classnames call", test(type)("classnames"));
+    });
+  });
 });
 

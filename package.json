@@ -32,6 +32,7 @@
   },
   "homepage": "https://github.com/walmartreact/babel-plugin-react-cssmoduleify#readme",
   "devDependencies": {
+    "array-find": "^1.0.0",
     "assert-transform": "github:walmartreact/assert-transform",
     "babel-cli": "^6.4.0",
     "babel-core": "^6.4.0",

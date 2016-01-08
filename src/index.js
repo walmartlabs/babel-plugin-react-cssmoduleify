@@ -9,6 +9,7 @@ type State = {
 };
 
 import template from "babel-template";
+import find from "array-find";
 
 /**
  * TemplateElement value nodes must be of the shape {raw: string; value: string}
@@ -18,6 +19,13 @@ const templateElementValue = (value) => ({raw: value, cooked: value});
 
 export default ({types: t}) => {
   const ROOT_CSSNAMES_IDENTIFIER = "cssmodule";
+
+  const matchesPatterns = (path, patterns) => (
+    !!find(patterns, (pattern) => (
+      t.isIdentifier(path.node, { name: pattern }) ||
+      path.matchesPattern(pattern)
+    ))
+  );
 
   /**
    * Generate the required TemplateElements for the following type of template:
@@ -152,6 +160,17 @@ export default ({types: t}) => {
     );
   };
 
+  const updateClassName = (value, cssmodule) => {
+    if (t.isStringLiteral(value)) {
+      return value.replaceWith(computeClassName(value, cssmodule));
+    } else if (t.isIdentifier(value)) {
+      return value.replaceWith(computeClassName(value, cssmodule));
+    } else if (t.isCallExpression(value)) {
+      return replaceCallExpression(value, cssmodule);
+    } else {
+      console.log("TODO: updateClassName for %s", value.type);
+    }
+  };
 
   /**
    * Updates a JSX className value with the most appropriate CSS Module lookup.
@@ -160,20 +179,13 @@ export default ({types: t}) => {
    * @param {Node<Identifier>} cssmodule cssmodule identifier
    */
   const updateJSXClassName = (value, cssmodule) => {
-    if (t.isJSXExpressionContainer(value)) {
-      return updateJSXClassName(value.get("expression"), cssmodule);
-    } else if (t.isStringLiteral(value)) {
-      return value.replaceWith({
+    if (!t.isJSXExpressionContainer(value)) {
+      value.replaceWith({
         type: "JSXExpressionContainer",
-        expression: computeClassName(value, cssmodule)
+        expression: value.node
       });
-    } else if (t.isIdentifier(value)) {
-      return value.replaceWith(computeClassName(value, cssmodule));
-    } else if (t.isCallExpression(value)) {
-      return replaceCallExpression(value, cssmodule);
-    } else {
-      console.log("TODO: updateJSXClassName for %s", value.type);
     }
+    updateClassName(value.get("expression"), cssmodule);
   };
 
   const buildRequire = template(`
@@ -204,6 +216,23 @@ export default ({types: t}) => {
         updateJSXClassName(path.get("value"), state.cssModuleId);
       },
 
+      CallExpression(path, state) {
+        if (matchesPatterns(path.get("callee"), ["React.createElement"])) {
+          if (!state.cssModuleId) {
+            state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
+          }
+
+          path.get("arguments")[1].get("properties").forEach((property) => {
+            if (property.node.key.name === "className") {
+              updateClassName(
+                property.get("value"),
+                state.cssModuleId
+              );
+            }
+          });
+        }
+      },
+
       Program: {
         exit(path, state:State) {
           if (state.cssModuleId) {
@@ -212,11 +241,15 @@ export default ({types: t}) => {
               SOURCE: t.stringLiteral(state.opts.cssmodule)
             };
 
+            const firstChild = path.get("body")[0];
+            const {leadingComments} = firstChild.node;
+            delete firstChild.node.leadingComments;
             path.get("body")[0].insertBefore(
               state.opts.modules === "commonjs"
                 ? buildRequire(importOpts)
                 : buildImport(importOpts)
             );
+            path.get("body")[0].node.leadingComments = leadingComments;
           }
         }
       }
