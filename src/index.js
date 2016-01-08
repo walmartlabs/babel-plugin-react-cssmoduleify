@@ -41,16 +41,59 @@ export default ({types: t}) => {
     );
   };
 
-  const resolve = (path) => {
+  /**
+   * Resolves a path to most conservative Path to be converted. If there is only
+   * one reference to an Identifier we can mutate that safely, otherwise we
+   * return the original node to be transformed.
+   *
+   * @param {Path} path an Identifier or ArrayExpression Path
+   * @return {Path} the conservatively resolved path
+   */
+  const conservativeResolve = (path) => {
     // if it’s not an identifier we already have what we need
     if (!t.isIdentifier(path.node)) {
       return path;
     }
-    throw new Error("TODO: resolve identifier");
+    const binding = path.scope.getBinding(path.node.name);
+
+    // if there is only one reference, we can mutate that directly
+    if (binding.references === 1) {
+      if (t.isVariableDeclarator(binding.path)) {
+        return binding.path.get("init");
+      }
+      console.warn("TODO: ensure this branch is tracked");
+      return binding.path;
+    }
+
+    // else we should probably return conservatively only the one we want and
+    // transform inline
+    return path;
   };
 
+  /**
+   * Replaces [...].join(" ") or identifier.join(" ") with the most appropriate
+   * cssmodule lookup hash.
+   *
+   * @param {Path<Identifier|ArrayExpression>} path an Identifier or ArrayExpression Path
+   * @param {Node<Identifier>} cssmodule the root identifier to the cssmodules object
+   */
   const replaceArrayJoinElements = (path, cssmodule) => {
-    const arrayExpressionPath = resolve(path.get("callee").get("object"));
+    const arrayExpressionPath = conservativeResolve(path.get("callee").get("object"));
+    if (t.isIdentifier(arrayExpressionPath)) {
+      arrayExpressionPath.parent.object =
+        t.callExpression(
+          t.memberExpression(
+            arrayExpressionPath.node,
+            t.identifier("map"),
+            false
+          ),
+          [t.arrowFunctionExpression(
+            [t.identifier("i")],
+            t.memberExpression(cssmodule, t.identifier("i"), true)
+          )]
+        );
+      return;
+    }
 
     for (let i = 0; i < arrayExpressionPath.node.elements.length; i++) {
       const element = arrayExpressionPath.get("elements", i)[i];
@@ -73,6 +116,12 @@ export default ({types: t}) => {
     }
   };
 
+  /**
+   * Updates a JSX className value with the most appropriate CSS Module lookup.
+   *
+   * @param {Path} value <jsx className={value} />
+   * @param {Node<Identifier>} cssmodule cssmodule identifier
+   */
   const updateJSXClassName = (value, cssmodule) => {
     if (t.isJSXExpressionContainer(value)) {
       return updateJSXClassName(value.get("expression"), cssmodule);
@@ -83,7 +132,7 @@ export default ({types: t}) => {
       });
     } else if (t.isIdentifier(value)) {
       return value.replaceWith(computeClassName(value, cssmodule));
-    }else if (t.isCallExpression(value)) {
+    } else if (t.isCallExpression(value)) {
       if (isArrayJoin(value)) {
         return replaceArrayJoinElements(value, cssmodule);
       } else {
