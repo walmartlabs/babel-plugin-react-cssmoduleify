@@ -198,10 +198,6 @@ export default ({types: t}) => {
     const IMPORT_NAME = require(SOURCE);
   `);
 
-  const buildSplitJoin = template(`
-    CALL_EXPRESSION.split(" ").map(i => CSS_MODULE[i]).join(" ")
-  `);
-
   // TODO: template doesn't work for import.
   const buildImport = ({IMPORT_NAME, SOURCE}) =>
     t.importDeclaration(
