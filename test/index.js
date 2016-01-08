@@ -33,5 +33,7 @@ describe("babel-plugin-react-cssmoduleify", () => {
   it("should transform JSXExpressionContainer values", test("jsx")("string-multiple"));
   it("should transform *.join(\" \") expressions", test("jsx")("array-join"));
   it("should transform simple identifier expressions", test("jsx")("identifier"));
+  it("should transform a simple call expression", test("jsx")("call-expression"));
+  it("should transform a classnames call", test("jsx")("classnames"));
 });
 

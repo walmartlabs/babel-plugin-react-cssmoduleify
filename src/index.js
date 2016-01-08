@@ -117,6 +117,43 @@ export default ({types: t}) => {
   };
 
   /**
+   * Updates a callExpression value with the most appropriate CSS Module lookup.
+   *
+   * @param {Path} callExpression <jsx className={value()} />
+   * @param {Node<Identifier>} cssmodule cssmodule identifier
+   */
+  const replaceCallExpression = (callExpression, cssmodule) => {
+    if (isArrayJoin(callExpression)) {
+      return replaceArrayJoinElements(callExpression, cssmodule);
+    }
+
+    // this is just mean
+    callExpression.replaceWith(
+      t.callExpression(
+        t.memberExpression(
+          t.callExpression(
+            t.memberExpression(
+              t.callExpression(
+                t.memberExpression(callExpression.node, t.identifier("split"), false),
+                [t.stringLiteral(" ")]
+              ),
+              t.identifier("map")
+            ),
+            [t.arrowFunctionExpression(
+              [t.identifier("i")],
+              t.memberExpression(cssmodule, t.identifier("i"), true)
+            )]
+          ),
+          t.identifier("join"),
+          false
+        ),
+        [t.stringLiteral(" ")]
+      )
+    );
+  };
+
+
+  /**
    * Updates a JSX className value with the most appropriate CSS Module lookup.
    *
    * @param {Path} value <jsx className={value} />
@@ -133,11 +170,7 @@ export default ({types: t}) => {
     } else if (t.isIdentifier(value)) {
       return value.replaceWith(computeClassName(value, cssmodule));
     } else if (t.isCallExpression(value)) {
-      if (isArrayJoin(value)) {
-        return replaceArrayJoinElements(value, cssmodule);
-      } else {
-        console.log("TODO: updateJSXClassName for non [].join(\" \") %s", value.type);
-      }
+      return replaceCallExpression(value, cssmodule);
     } else {
       console.log("TODO: updateJSXClassName for %s", value.type);
     }
@@ -145,6 +178,10 @@ export default ({types: t}) => {
 
   const buildRequire = template(`
     const IMPORT_NAME = require(SOURCE);
+  `);
+
+  const buildSplitJoin = template(`
+    CALL_EXPRESSION.split(" ").map(i => CSS_MODULE[i]).join(" ")
   `);
 
   // TODO: template doesn't work for import.
