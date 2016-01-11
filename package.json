@@ -32,8 +32,11 @@
     "url": "https://github.com/walmartreact/babel-plugin-react-cssmoduleify/issues"
   },
   "homepage": "https://github.com/walmartreact/babel-plugin-react-cssmoduleify#readme",
-  "devDependencies": {
+  "dependencies": {
     "array-find": "^1.0.0",
+    "babel-template": "^6.3.13"
+  },
+  "devDependencies": {
     "assert-transform": "github:walmartreact/assert-transform",
     "babel-cli": "^6.4.0",
     "babel-core": "^6.4.0",
@@ -43,7 +46,6 @@
     "babel-plugin-transform-flow-strip-types": "^6.4.0",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-react": "^6.3.13",
-    "babel-template": "^6.3.13",
     "eslint": "^1.10.3",
     "eslint-config-defaults": "^7.1.1",
     "eslint-plugin-filenames": "^0.2.0",
