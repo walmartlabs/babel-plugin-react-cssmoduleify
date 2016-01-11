@@ -22,12 +22,6 @@ const test = (type, babelOptions) => (testCase) => () =>
   );
 
 describe("babel-plugin-react-cssmoduleify", () => {
-  before(function () {
-    // TODO: lol @baer babel does push ups!
-    this.timeout(10000);
-    babel.transform("const x = 1;", BABEL_OPTIONS);
-  });
-
   ["jsx", "createElement", "compiled"].forEach((type) => {
     describe(type, () => {
       it("should transform simple literals", test(type)("string"));
