@@ -8,6 +8,7 @@ type Path<node> = {
 type StateOpts = {
   cssmodule: string;
   modules: "commonjs"|"es6";
+  path: string;
 };
 
 type State = {
@@ -25,6 +26,7 @@ const templateElementValue = (value) => ({raw: value, cooked: value});
 
 export default ({types: t}) => {
   const ROOT_CSSNAMES_IDENTIFIER = "cssmodule";
+  const BAIL_OUT = "__dontTransformMe";
 
   const matchesPatterns = (path:Path<any>, patterns:Array<string>) => (
     !!find(patterns, (pattern) => (
@@ -207,6 +209,10 @@ export default ({types: t}) => {
   return {
     visitor: {
       JSXAttribute(path, state) {
+        if (state[BAIL_OUT]) {
+          return;
+        }
+
         if (path.get("name").node.name !== "className") {
           return;
         }
@@ -219,6 +225,10 @@ export default ({types: t}) => {
       },
 
       CallExpression(path, state) {
+        if (state[BAIL_OUT]) {
+          return;
+        }
+
         const isCreateElementCall = matchesPatterns(
           path.get("callee"),
           ["React.createElement", "_react2.default.createElement"]
@@ -244,14 +254,22 @@ export default ({types: t}) => {
 
       Program: {
         enter(path, state:State) {
-          // detect if this is likely compiled source
-          if (path.scope.getBinding("_interopRequireDefault")) {
-            state.transformingOutput = true;
-            state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
+          if (!state.opts.path || new RegExp(state.opts.path).test(state.opts.filename)) {
+            // detect if this is likely compiled source
+            if (path.scope.getBinding("_interopRequireDefault")) {
+              state.transformingOutput = true;
+              state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
+            }
+          } else {
+            state[BAIL_OUT] = true;
           }
         },
 
         exit(path, state:State) {
+          if (state[BAIL_OUT]) {
+            return;
+          }
+
           if (state.cssModuleId) {
             const importOpts = {
               IMPORT_NAME: state.cssModuleId,

@@ -28,22 +28,26 @@ compiled JSX output.
 ```js
 {
   "plugins": [
-    "babel-plugin-react-cssmoduleify",, {
+    ["babel-plugin-react-cssmoduleify", {
+      // this string is applied to the current path to transform or bail out.
+      // This is because this plugin is often used on external code.
+      "path": "node_modules/regex-path-"
       "cssmodule": "client/styles/base.styl"
       "modules": "es6"
-    }
+    }]
   ],
 }
 ```
 
 #### Options:
 
+* `path`: `string`: string applied as a regex to each compiled file
 * `cssmodule`: `string`: path from `process.cwd()` to global CSS file
 * `modules`: `"es6"|"commonjs"` the type of module system cssmodule should be required as.
 
 ## Examples
 
-Look at the unit tests to see what the output is.
+Look at the unit tests.
 
 ## Caveats
 
