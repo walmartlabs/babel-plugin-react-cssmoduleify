@@ -29,7 +29,7 @@ const LOG_CACHE = {};
  * @param {Node} node AST node
  * @param {Path} [path] optional AST Path for printing additional context.
  **/
-const logOnce = (fnName, node, path) => {
+const LogOnceImplementation = (fnName, node, path) => {
   const name = `${fnName}-${node.type}`;
   if (!LOG_CACHE[name]) {
     LOG_CACHE[name] = true;
@@ -48,6 +48,9 @@ const logOnce = (fnName, node, path) => {
 const templateElementValue = (value) => ({raw: value, cooked: value});
 
 export default ({types: t}) => { // eslint-disable-line
+  // by default logging is a noop, but it is configurable
+  let logOnce = () => {};
+
   const ROOT_CSSNAMES_IDENTIFIER = "cssmodule";
   const BAIL_OUT = "__dontTransformMe";
 
@@ -375,6 +378,10 @@ export default ({types: t}) => { // eslint-disable-line
 
       Program: {
         enter(path, state:State) {
+          if (state.opts.log) {
+            logOnce = LogOnceImplementation;
+          }
+
           if (!state.opts.path || new RegExp(state.opts.path).test(state.file.opts.filename)) {
             // detect if this is likely compiled source
             if (path.scope.getBinding("_interopRequireDefault")) {

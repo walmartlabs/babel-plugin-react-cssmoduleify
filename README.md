@@ -33,7 +33,8 @@ compiled JSX output.
       // This is because this plugin is often used on external code.
       "path": "node_modules/regex-path-"
       "cssmodule": "client/styles/base.styl"
-      "modules": "es6"
+      "modules": "es6",
+      "log": true
     }]
   ],
 }
@@ -44,6 +45,7 @@ compiled JSX output.
 * `path`: `string`: string applied as a regex to each compiled file
 * `cssmodule`: `string`: path from `process.cwd()` to global CSS file
 * `modules`: `"es6"|"commonjs"` the type of module system cssmodule should be required as.
+* `log`: `boolean` log potentially unhandled cases. Default to false.
 
 ## Examples
 
