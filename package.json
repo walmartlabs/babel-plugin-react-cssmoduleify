@@ -9,7 +9,7 @@
     "prepublish": "npm run build",
     "lint": "eslint .",
     "compile-tests": "babel --presets es2015,react test/fixtures/jsx/*/ --out-dir test/fixtures/compiled",
-    "pretest": "npm run build && npm run compile-tests",
+    "pretest": "npm run build",
     "test": "mocha ./test/index.js"
   },
   "files": [

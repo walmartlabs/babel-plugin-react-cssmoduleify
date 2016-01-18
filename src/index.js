@@ -48,7 +48,7 @@ const logOnce = (fnName, node, path) => {
  */
 const templateElementValue = (value) => ({raw: value, cooked: value});
 
-export default ({types: t}) => {
+export default ({types: t}) => { // eslint-disable-line
   const ROOT_CSSNAMES_IDENTIFIER = "cssmodule";
   const BAIL_OUT = "__dontTransformMe";
 
@@ -202,7 +202,7 @@ export default ({types: t}) => {
         if (t.isNullLiteral(sourceNode)) {
           return;
         } else if (t.isCallExpression(sourceNode)) {
-          sourceNode.get("argument").forEach((arg) => {
+          sourceNode.get("arguments").forEach((arg) => {
             if (t.isObjectExpression(arg)) {
               arg.get("properties").forEach(updateProperty);
             }
