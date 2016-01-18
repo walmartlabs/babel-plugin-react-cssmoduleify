@@ -17,6 +17,7 @@ type State = {
 
 import template from "babel-template";
 import find from "array-find";
+import {join} from "path";
 
 /**
  * TemplateElement value nodes must be of the shape {raw: string; value: string}
@@ -175,6 +176,8 @@ export default ({types: t}) => {
       return value.replaceWith(computeClassName(value, cssmodule));
     } else if (t.isCallExpression(value)) {
       return replaceCallExpression(value, cssmodule);
+    } else if (t.isObjectProperty(value)) {
+      return updateClassName(value.get("value"), cssmodule);
     } else {
       console.log("TODO: updateClassName for %s", value.type);
     }
@@ -238,23 +241,33 @@ export default ({types: t}) => {
           return;
         }
 
+        const updateProperty = (property) => {
+          if (property.node.key.name !== "className") {
+            return;
+          }
+
+          updateClassName(property.get("value"), state.cssModuleId);
+        };
+
         if (!state.cssModuleId) {
           state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
         }
 
-        path.get("arguments")[1].get("properties").forEach((property) => {
-          if (property.node.key.name === "className") {
-            updateClassName(
-              property.get("value"),
-              state.cssModuleId
-            );
-          }
-        });
+        const argument = path.get("arguments")[1];
+        if (t.isCallExpression(argument)) {
+          argument.get("arguments").forEach((arg) => {
+            if (t.isObjectExpression(arg)) {
+              arg.get("properties").forEach(updateProperty);
+            }
+          });
+        } else {
+          argument.get("properties").forEach(updateProperty);
+        }
       },
 
       Program: {
         enter(path, state:State) {
-          if (!state.opts.path || new RegExp(state.opts.path).test(state.opts.filename)) {
+          if (!state.opts.path || new RegExp(state.opts.path).test(state.file.opts.filename)) {
             // detect if this is likely compiled source
             if (path.scope.getBinding("_interopRequireDefault")) {
               state.transformingOutput = true;
@@ -273,7 +286,10 @@ export default ({types: t}) => {
           if (state.cssModuleId) {
             const importOpts = {
               IMPORT_NAME: state.cssModuleId,
-              SOURCE: t.stringLiteral(state.opts.cssmodule)
+              SOURCE: t.stringLiteral(join(
+                process.env.NODE_ENV === "test" ? "" : process.cwd(),
+                state.opts.cssmodule
+              ))
             };
 
             const firstChild = path.get("body")[0];

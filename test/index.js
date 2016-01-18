@@ -1,7 +1,8 @@
-/* global describe, before, it */
+/* global describe, it */
 /* eslint no-invalid-this: 0 */
+process.env.NODE_ENV = "test";
+
 const assertTransform = require("assert-transform");
-const babel = require("babel-core");
 const path = require("path");
 
 const BABEL_OPTIONS = {
@@ -31,6 +32,7 @@ describe("babel-plugin-react-cssmoduleify", () => {
       it("should transform simple identifier expressions", test(type)("identifier"));
       it("should transform a simple call expression", test(type)("call-expression"));
       it("should transform a classnames call", test(type)("classnames"));
+      it("should transform a spread assignment", test(type)("jsx-spread"));
     });
   });
 });

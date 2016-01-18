@@ -5,9 +5,14 @@ export default class extends React.Component {
   render() {
     return React.createElement(
       "div",
-      {className: base},
+      Object.assign({},
+        this.props,
+        {className: base}
+      ),
       "Base test."
     );
   }
 };
+
+
 

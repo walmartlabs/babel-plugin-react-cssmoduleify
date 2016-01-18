@@ -3,11 +3,13 @@ const base = "base";
 
 export default class extends React.Component {
   render() {
-    return React.createElement(
-      "div",
-      {className: base},
-      "Base test."
+    return (
+      <div {...this.props} className={base}>
+        Base test.
+      </div>
     );
   }
 };
+
+
 
