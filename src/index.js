@@ -37,6 +37,17 @@ export default ({types: t}) => {
   );
 
   /**
+   * Updates a ConditionalExpression consequent or alternate node with the most
+   * appropriate CSS Module lookup.
+   *
+   * @param {Path} path consequent or alternate node of a conditional expression
+   * @param {Node<Identifier>} cssmodule cssmodule identifier
+   */
+  const replaceConditionalExpression = (path, cssmodule) => {
+    return path.replaceWith(computeClassName(path, cssmodule));
+  };
+
+  /**
    * Generate the required TemplateElements for the following type of template:
    * `${ slot } ${ anotherslot }`
    */
@@ -49,6 +60,9 @@ export default ({types: t}) => {
 
   const computeClassName = (value, cssmodule) => {
     if (t.isStringLiteral(value)) {
+      if (value.node.value === "") {
+        return value.node;
+      }
       const values = value.node.value.split(" ");
       return values.length === 1
         ? t.memberExpression(cssmodule, t.stringLiteral(values[0]), true)
@@ -59,6 +73,15 @@ export default ({types: t}) => {
     } else if (t.isIdentifier(value)) {
       // TODO: need to validate what type of node this identifier refers to
       return t.memberExpression(cssmodule, value.node, true);
+    } else if (t.isMemberExpression(value)) {
+      return t.memberExpression(cssmodule, value.node, true);
+    } else if (t.isConditionalExpression(value)) {
+      replaceConditionalExpression(value.get("consequent"), cssmodule);
+      replaceConditionalExpression(value.get("alternate"), cssmodule);
+      return value.node;
+    } else {
+      console.log("TODO(computeClassName): handle %s", value.node.type);
+      return value.node;
     }
   };
 
@@ -172,7 +195,7 @@ export default ({types: t}) => {
   const updateClassName = (value, cssmodule) => {
     if (t.isStringLiteral(value)) {
       value.replaceWith(computeClassName(value, cssmodule));
-    } else if (t.isIdentifier(value)) {
+    } else if (t.isIdentifier(value) || t.isMemberExpression(value)) {
       value.replaceWith(computeClassName(value, cssmodule));
     } else if (t.isCallExpression(value)) {
       replaceCallExpression(value, cssmodule);
@@ -185,7 +208,7 @@ export default ({types: t}) => {
       updateClassName(value.get("left"), cssmodule);
       updateClassName(value.get("right"), cssmodule);
     } else {
-      console.log("TODO: updateClassName for %s", value.type);
+      console.log("TODO(updateClassName): handle %s", value.type);
     }
   };
 
@@ -258,16 +281,18 @@ export default ({types: t}) => {
         };
 
         const argument = path.get("arguments")[1];
-        if (t.isCallExpression(argument)) {
+        if (t.isNullLiteral(argument)) {
+          return;
+        } else if (t.isCallExpression(argument)) {
           argument.get("arguments").forEach((arg) => {
             if (t.isObjectExpression(arg)) {
               arg.get("properties").forEach(updateProperty);
             }
           });
-        } else if (t.isObjectExpression(argument.get("properties"))) {
+        } else if (t.isObjectExpression(argument)) {
           argument.get("properties").forEach(updateProperty);
         } else {
-          console.log("TODO: handle CallExpression for %s", argument.node.type);
+          console.log("TODO(CallExpression Visitor): handle %s", argument.node.type);
         }
       },
 

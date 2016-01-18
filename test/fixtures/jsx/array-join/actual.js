@@ -2,7 +2,7 @@ import React from "react";
 
 export default class extends React.Component {
   render() {
-    const arrayIdentifier = ["good", "luck"];
+    const arrayIdentifier = ["good", this.props.luck];
     const beConservative = ["good", "luck"];
 
     return (

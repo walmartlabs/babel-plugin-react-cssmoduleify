@@ -30,7 +30,7 @@ var _class = (function (_React$Component) {
   _createClass(_class, [{
     key: "render",
     value: function render() {
-      var arrayIdentifier = ["good", "luck"];
+      var arrayIdentifier = ["good", this.props.good];
       var beConservative = ["good", "luck"];
 
       return _react2.default.createElement(
