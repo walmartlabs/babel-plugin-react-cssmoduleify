@@ -34,6 +34,7 @@ describe("babel-plugin-react-cssmoduleify", () => {
       it("should transform a classnames call", test(type)("classnames"));
       it("should transform a spread assignment", test(type)("jsx-spread"));
       it("should transform binary expressions", test(type)("binary-expression"));
+      it("should transform logical expressions", test(type)("logical-expression"));
     });
   });
 });

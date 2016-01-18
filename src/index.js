@@ -181,6 +181,9 @@ export default ({types: t}) => {
     } else if (t.isConditionalExpression(value)) {
       updateClassName(value.get("consequent"), cssmodule);
       updateClassName(value.get("alternate"), cssmodule);
+    } else if (t.isLogicalExpression(value)) {
+      updateClassName(value.get("left"), cssmodule);
+      updateClassName(value.get("right"), cssmodule);
     } else {
       console.log("TODO: updateClassName for %s", value.type);
     }
@@ -244,17 +247,15 @@ export default ({types: t}) => {
           return;
         }
 
-        const updateProperty = (property) => {
-          if (property.node.key.name !== "className") {
-            return;
-          }
-
-          updateClassName(property.get("value"), state.cssModuleId);
-        };
-
         if (!state.cssModuleId) {
           state.cssModuleId = path.scope.generateUidIdentifier(ROOT_CSSNAMES_IDENTIFIER);
         }
+
+        const updateProperty = (property) => {
+          if (property.node.key.name === "className") {
+            updateClassName(property.get("value"), state.cssModuleId);
+          }
+        };
 
         const argument = path.get("arguments")[1];
         if (t.isCallExpression(argument)) {
@@ -263,8 +264,10 @@ export default ({types: t}) => {
               arg.get("properties").forEach(updateProperty);
             }
           });
-        } else {
+        } else if (t.isObjectExpression(argument.get("properties"))) {
           argument.get("properties").forEach(updateProperty);
+        } else {
+          console.log("TODO: handle CallExpression for %s", argument.node.type);
         }
       },
 
