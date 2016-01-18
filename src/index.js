@@ -83,6 +83,13 @@ export default ({types: t}) => { // eslint-disable-line
         : t.templateElement(templateElementValue(" "), false)
     );
 
+  const maybeCSSModuleExpression = (node, cssmodule) =>
+    t.logicalExpression(
+      "||",
+      t.memberExpression(cssmodule, node, true),
+      node
+    );
+
   const computeClassName = (value, cssmodule) => {
     if (t.isStringLiteral(value)) {
       if (value.node.value === "") {
@@ -169,7 +176,7 @@ export default ({types: t}) => { // eslint-disable-line
           ),
           [t.arrowFunctionExpression(
             [t.identifier("i")],
-            t.memberExpression(cssmodule, t.identifier("i"), true)
+            maybeCSSModuleExpression(t.identifier("i"), cssmodule)
           )]
         );
       return;
@@ -251,7 +258,7 @@ export default ({types: t}) => { // eslint-disable-line
             ),
             [t.arrowFunctionExpression(
               [t.identifier("i")],
-              t.memberExpression(cssmodule, t.identifier("i"), true)
+              maybeCSSModuleExpression(t.identifier("i"), cssmodule)
             )]
           ),
           t.identifier("join"),

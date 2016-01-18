@@ -61,7 +61,7 @@ var _class = function (_React$Component) {
       return _react2.default.createElement("div", { className: (0, _classnames2.default)("hello", this.hideable(), {
             "a": true,
             "b": false
-          }).split(" ").map(i => _cssmodule[i]).join(" ") }, "Base test.");
+          }).split(" ").map(i => _cssmodule[i] || i).join(" ") }, "Base test.");
     }
   }]);
 

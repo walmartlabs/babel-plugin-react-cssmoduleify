@@ -58,7 +58,7 @@ var _class = function (_React$Component) {
   _createClass(_class, [{
     key: "render",
     value: function render() {
-      return _react2.default.createElement("div", { className: base().split(" ").map(i => _cssmodule[i]).join(" ") }, "Base test.");
+      return _react2.default.createElement("div", { className: base().split(" ").map(i => _cssmodule[i] || i).join(" ") }, "Base test.");
     }
   }]);
 

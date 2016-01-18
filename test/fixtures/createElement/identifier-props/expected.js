@@ -7,7 +7,7 @@ export default class extends React.Component {
   render() {
     const classes = classname("hello", {
       "world": true
-    }).split(" ").map(i => _cssmodule[i]).join(" ");
+    }).split(" ").map(i => _cssmodule[i] || i).join(" ");
 
     const props = {
       className: classes

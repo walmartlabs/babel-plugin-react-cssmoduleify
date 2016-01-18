@@ -7,7 +7,7 @@ export default class extends React.Component {
     return React.createElement("div", { className: classnames("hello", this.hideable(), {
       "a": true,
       "b": false
-        }).split(" ").map(i => _cssmodule[i]).join(" ")
+        }).split(" ").map(i => _cssmodule[i] || i).join(" ")
       }, "Base test.");
   }
 };

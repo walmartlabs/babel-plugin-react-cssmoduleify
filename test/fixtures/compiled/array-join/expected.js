@@ -57,7 +57,7 @@ var _class = function (_React$Component) {
       var arrayIdentifier = [_cssmodule["good"], _cssmodule[this.props.good]];
       var beConservative = ["good", "luck"];
 
-      return _react2.default.createElement("div", { className: [_cssmodule["hello"], _cssmodule["world"]].join(" ") }, _react2.default.createElement("div", { className: arrayIdentifier.join(" ") }, _react2.default.createElement("div", { className: beConservative.map(i => _cssmodule[i]).join(" ") }, "Base test.", beConservative.join(" "))));
+      return _react2.default.createElement("div", { className: [_cssmodule["hello"], _cssmodule["world"]].join(" ") }, _react2.default.createElement("div", { className: arrayIdentifier.join(" ") }, _react2.default.createElement("div", { className: beConservative.map(i => _cssmodule[i] || i).join(" ") }, "Base test.", beConservative.join(" "))));
     }
   }]);
 

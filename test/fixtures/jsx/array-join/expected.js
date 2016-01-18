@@ -8,7 +8,7 @@ export default class extends React.Component {
 
     return <div className={[_cssmodule["hello"], _cssmodule["world"]].join(" ")}>
       <div className={arrayIdentifier.join(" ")}>
-        <div className={beConservative.map(i => _cssmodule[i]).join(" ")}>
+        <div className={beConservative.map(i => _cssmodule[i] || i).join(" ")}>
           Base test.
           {beConservative.join(" ")}
         </div>
