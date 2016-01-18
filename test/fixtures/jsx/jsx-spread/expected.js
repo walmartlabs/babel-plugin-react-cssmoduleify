@@ -1,10 +1,10 @@
 import _cssmodule from "path/to/classnames.css";
 import React from "react";
-const base = "base";
+const base = _cssmodule["base"];
 
 export default class extends React.Component {
   render() {
-    return <div {...this.props} className={_cssmodule[base]}>
+    return <div {...this.props} className={base}>
       Base test.
     </div>;
   }

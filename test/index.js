@@ -37,7 +37,7 @@ describe("babel-plugin-react-cssmoduleify", () => {
       it("should transform logical expressions", test(type)("logical-expression"));
 
       if (type === "createElement") {
-        it.only("should transform prop identifiers", test(type)("identifier-props"));
+        it("should transform prop identifiers", test(type)("identifier-props"));
       }
     });
   });

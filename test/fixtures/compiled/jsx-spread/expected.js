@@ -52,7 +52,7 @@ function _inherits(subClass, superClass) {
   }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 }
 
-var base = "base";
+var base = _cssmodule["base"];
 
 var _class = function (_React$Component) {
   _inherits(_class, _React$Component);
@@ -66,7 +66,7 @@ var _class = function (_React$Component) {
   _createClass(_class, [{
     key: "render",
     value: function render() {
-      return _react2.default.createElement("div", _extends({}, this.props, { className: _cssmodule[base] }), "Base test.");
+      return _react2.default.createElement("div", _extends({}, this.props, { className: base }), "Base test.");
     }
   }]);
 

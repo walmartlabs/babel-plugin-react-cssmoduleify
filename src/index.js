@@ -30,12 +30,11 @@ const LOG_CACHE = {};
  * @param {Path} [path] optional AST Path for printing additional context.
  **/
 const logOnce = (fnName, node, path) => {
-  console.log("logOnce", node);
   const name = `${fnName}-${node.type}`;
   if (!LOG_CACHE[name]) {
     LOG_CACHE[name] = true;
     console.log(
-      "TODO(%s): handle %s.\n%s\n",
+      "babel-plugin-react-cssmoduleify WARNING(%s): unhandled node type `%s`.\n%s\n",
       fnName,
       node.type,
       generate(path ? path.node : node).code
@@ -186,7 +185,7 @@ export default ({types: t}) => { // eslint-disable-line
    * @param {Path<Identifier} path an Identifier Path
    * @param {Node<Identifier>} cssmodule the root identifier to the cssmodules object
    */
-  const replaceIdentifier = (path, cssmodule) => {
+  const replaceIdentifier = (path, cssmodule) => { // eslint-disable-line
     const binding = path.scope.getBinding(path.node.name);
 
     const updateProperty = (property) => {
@@ -195,30 +194,32 @@ export default ({types: t}) => { // eslint-disable-line
       }
     };
 
-    // if there is only one reference, we can mutate that directly
-    if (binding.references === 1) {
-      if (t.isVariableDeclarator(binding.path)) {
-        const sourceNode = binding.path.get("init");
-        if (t.isNullLiteral(sourceNode)) {
-          return;
-        } else if (t.isCallExpression(sourceNode)) {
-          sourceNode.get("arguments").forEach((arg) => {
-            if (t.isObjectExpression(arg)) {
-              arg.get("properties").forEach(updateProperty);
-            }
-          });
-        } else if (t.isObjectExpression(sourceNode)) {
-          sourceNode.get("properties").forEach(updateProperty);
-        } else if (t.isIdentifier(sourceNode)) {
-          replaceIdentifier(sourceNode, cssmodule);
-        } else {
-          // updateClassName(binding.path.get("init"), cssmodule); // eslint-disable-line
-        }
+    if (t.isVariableDeclarator(binding.path)) {
+      // if there is only one reference, we can mutate that directly
+      // we're assuming a props identifier is only used in local props so this
+      // is technically a destructive transform.
+      if (binding.references > 1) {
+        logOnce("replaceIdentifier", {type: "with multiple references"}, binding.path);
+      }
+
+      const sourceNode = binding.path.get("init");
+      if (t.isNullLiteral(sourceNode)) {
+        return;
+      } else if (t.isCallExpression(sourceNode)) {
+        sourceNode.get("arguments").forEach((arg) => {
+          if (t.isObjectExpression(arg)) {
+            arg.get("properties").forEach(updateProperty);
+          }
+        });
+      } else if (t.isObjectExpression(sourceNode)) {
+        sourceNode.get("properties").forEach(updateProperty);
+      } else if (t.isIdentifier(sourceNode)) {
+        replaceIdentifier(sourceNode, cssmodule);
       } else {
-        logOnce("replaceIdentifier[maybe]", binding.path);
+        updateClassName(sourceNode, cssmodule); // eslint-disable-line
       }
     } else {
-      console.warn("TODO: replaceIdentifier multiple references");
+      logOnce("replaceIdentifier[maybe]", binding.path.node, binding.path);
     }
   };
 
@@ -265,8 +266,8 @@ export default ({types: t}) => { // eslint-disable-line
       value.replaceWith(computeClassName(value, cssmodule));
     } else if (t.isIdentifier(value)) {
       const binding = value.scope.getBinding(value.node.name);
+
       if (t.isVariableDeclarator(binding.path.node)) {
-        console.log("updateClassName with variablie declarator init");
         updateClassName(binding.path.get("init"), cssmodule);
       } else {
         value.replaceWith(computeClassName(value, cssmodule));
