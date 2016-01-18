@@ -34,6 +34,7 @@
   "homepage": "https://github.com/walmartreact/babel-plugin-react-cssmoduleify#readme",
   "dependencies": {
     "array-find": "^1.0.0",
+    "babel-generator": "^6.4.3",
     "babel-template": "^6.3.13"
   },
   "devDependencies": {

@@ -16,14 +16,37 @@ type State = {
 };
 
 import template from "babel-template";
+import generate from "babel-generator";
 import find from "array-find";
 import {join} from "path";
+
+const LOG_CACHE = {};
+
+/**
+ * Convenience method to log additional work to do a single time per node type.
+ *
+ * @param {string} fnName function being called
+ * @param {Node} node AST node
+ * @param {Path} [path] optional AST Path for printing additional context.
+ **/
+const logOnce = (fnName, node, path) => {
+  console.log("logOnce", node);
+  const name = `${fnName}-${node.type}`;
+  if (!LOG_CACHE[name]) {
+    LOG_CACHE[name] = true;
+    console.log(
+      "TODO(%s): handle %s.\n%s\n",
+      fnName,
+      node.type,
+      generate(path ? path.node : node).code
+    );
+  }
+};
 
 /**
  * TemplateElement value nodes must be of the shape {raw: string; value: string}
  */
 const templateElementValue = (value) => ({raw: value, cooked: value});
-
 
 export default ({types: t}) => {
   const ROOT_CSSNAMES_IDENTIFIER = "cssmodule";
@@ -44,7 +67,7 @@ export default ({types: t}) => {
    * @param {Node<Identifier>} cssmodule cssmodule identifier
    */
   const replaceConditionalExpression = (path, cssmodule) => {
-    return path.replaceWith(computeClassName(path, cssmodule));
+    return path.replaceWith(computeClassName(path, cssmodule)); // eslint-disable-line
   };
 
   /**
@@ -80,7 +103,7 @@ export default ({types: t}) => {
       replaceConditionalExpression(value.get("alternate"), cssmodule);
       return value.node;
     } else {
-      console.log("TODO(computeClassName): handle %s", value.node.type);
+      logOnce("computeClassName", value.node);
       return value.node;
     }
   };
@@ -157,6 +180,49 @@ export default ({types: t}) => {
   };
 
   /**
+   * Replaces React.createElement(..., path, ...) with the most appropriate
+   * cssmodule lookup hash.
+   *
+   * @param {Path<Identifier} path an Identifier Path
+   * @param {Node<Identifier>} cssmodule the root identifier to the cssmodules object
+   */
+  const replaceIdentifier = (path, cssmodule) => {
+    const binding = path.scope.getBinding(path.node.name);
+
+    const updateProperty = (property) => {
+      if (property.node.key.name === "className") {
+        updateClassName(property.get("value"), cssmodule); // eslint-disable-line
+      }
+    };
+
+    // if there is only one reference, we can mutate that directly
+    if (binding.references === 1) {
+      if (t.isVariableDeclarator(binding.path)) {
+        const sourceNode = binding.path.get("init");
+        if (t.isNullLiteral(sourceNode)) {
+          return;
+        } else if (t.isCallExpression(sourceNode)) {
+          sourceNode.get("argument").forEach((arg) => {
+            if (t.isObjectExpression(arg)) {
+              arg.get("properties").forEach(updateProperty);
+            }
+          });
+        } else if (t.isObjectExpression(sourceNode)) {
+          sourceNode.get("properties").forEach(updateProperty);
+        } else if (t.isIdentifier(sourceNode)) {
+          replaceIdentifier(sourceNode, cssmodule);
+        } else {
+          // updateClassName(binding.path.get("init"), cssmodule); // eslint-disable-line
+        }
+      } else {
+        logOnce("replaceIdentifier[maybe]", binding.path);
+      }
+    } else {
+      console.warn("TODO: replaceIdentifier multiple references");
+    }
+  };
+
+  /**
    * Updates a callExpression value with the most appropriate CSS Module lookup.
    *
    * @param {Path} callExpression <jsx className={value()} />
@@ -195,8 +261,16 @@ export default ({types: t}) => {
   const updateClassName = (value, cssmodule) => {
     if (t.isStringLiteral(value)) {
       value.replaceWith(computeClassName(value, cssmodule));
-    } else if (t.isIdentifier(value) || t.isMemberExpression(value)) {
+    } else if (t.isMemberExpression(value)) {
       value.replaceWith(computeClassName(value, cssmodule));
+    } else if (t.isIdentifier(value)) {
+      const binding = value.scope.getBinding(value.node.name);
+      if (t.isVariableDeclarator(binding.path.node)) {
+        console.log("updateClassName with variablie declarator init");
+        updateClassName(binding.path.get("init"), cssmodule);
+      } else {
+        value.replaceWith(computeClassName(value, cssmodule));
+      }
     } else if (t.isCallExpression(value)) {
       replaceCallExpression(value, cssmodule);
     } else if (t.isObjectProperty(value)) {
@@ -204,11 +278,11 @@ export default ({types: t}) => {
     } else if (t.isConditionalExpression(value)) {
       updateClassName(value.get("consequent"), cssmodule);
       updateClassName(value.get("alternate"), cssmodule);
-    } else if (t.isLogicalExpression(value)) {
+    } else if (t.isLogicalExpression(value) || t.isBinaryExpression(value)) {
       updateClassName(value.get("left"), cssmodule);
       updateClassName(value.get("right"), cssmodule);
     } else {
-      console.log("TODO(updateClassName): handle %s", value.type);
+      logOnce("updateClassName", value);
     }
   };
 
@@ -291,8 +365,10 @@ export default ({types: t}) => {
           });
         } else if (t.isObjectExpression(argument)) {
           argument.get("properties").forEach(updateProperty);
+        } else if (t.isIdentifier(argument)) {
+          replaceIdentifier(argument, state.cssModuleId);
         } else {
-          console.log("TODO(CallExpression Visitor): handle %s", argument.node.type);
+          logOnce("CallExpression Visitor", argument.node, path);
         }
       },
 
