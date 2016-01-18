@@ -171,13 +171,16 @@ export default ({types: t}) => {
 
   const updateClassName = (value, cssmodule) => {
     if (t.isStringLiteral(value)) {
-      return value.replaceWith(computeClassName(value, cssmodule));
+      value.replaceWith(computeClassName(value, cssmodule));
     } else if (t.isIdentifier(value)) {
-      return value.replaceWith(computeClassName(value, cssmodule));
+      value.replaceWith(computeClassName(value, cssmodule));
     } else if (t.isCallExpression(value)) {
-      return replaceCallExpression(value, cssmodule);
+      replaceCallExpression(value, cssmodule);
     } else if (t.isObjectProperty(value)) {
-      return updateClassName(value.get("value"), cssmodule);
+      updateClassName(value.get("value"), cssmodule);
+    } else if (t.isConditionalExpression(value)) {
+      updateClassName(value.get("consequent"), cssmodule);
+      updateClassName(value.get("alternate"), cssmodule);
     } else {
       console.log("TODO: updateClassName for %s", value.type);
     }
