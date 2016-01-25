@@ -1,6 +1,6 @@
 "use strict";
 
-const _cssmodule = require("path/to/classnames.css");
+var _cssmodule = require("path/to/classnames.css");
 
 var _createClass = function () {
   function defineProperties(target, props) {

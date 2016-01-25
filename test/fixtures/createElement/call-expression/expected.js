@@ -4,9 +4,8 @@ const base = _ => "base";
 
 export default class extends React.Component {
   render() {
-    return React.createElement("div", { className: base().split(" ").map(i => _cssmodule[i] || i).join(" ") }, "Base Test.");
+    return React.createElement("div", { className: base().split(" ").map(function (i) {
+      return _cssmodule[i] || i;
+    }).join(" ") }, "Base Test.");
   }
 };
-
-
-

@@ -1,6 +1,6 @@
 "use strict";
 
-const _cssmodule = require("path/to/classnames.css");
+var _cssmodule = require("path/to/classnames.css");
 
 var _createClass = function () {
   function defineProperties(target, props) {
@@ -57,7 +57,9 @@ var _class = function (_React$Component) {
       var arrayIdentifier = [_cssmodule["good"], _cssmodule[this.props.good]];
       var beConservative = ["good", "luck"];
 
-      return _react2.default.createElement("div", { className: [_cssmodule["hello"], _cssmodule["world"]].join(" ") }, _react2.default.createElement("div", { className: arrayIdentifier.join(" ") }, _react2.default.createElement("div", { className: beConservative.map(i => _cssmodule[i] || i).join(" ") }, "Base test.", beConservative.join(" "))));
+      return _react2.default.createElement("div", { className: [_cssmodule["hello"], _cssmodule["world"]].join(" ") }, _react2.default.createElement("div", { className: arrayIdentifier.join(" ") }, _react2.default.createElement("div", { className: beConservative.map(function (i) {
+        return _cssmodule[i] || i;
+      }).join(" ") }, "Base test.", beConservative.join(" "))));
     }
   }]);
 

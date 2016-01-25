@@ -174,9 +174,12 @@ export default ({types: t}) => { // eslint-disable-line
             t.identifier("map"),
             false
           ),
-          [t.arrowFunctionExpression(
+          [t.functionExpression(
+            null,
             [t.identifier("i")],
-            maybeCSSModuleExpression(t.identifier("i"), cssmodule)
+            t.blockStatement([
+              t.returnStatement(maybeCSSModuleExpression(t.identifier("i"), cssmodule))
+            ])
           )]
         );
       return;
@@ -256,9 +259,12 @@ export default ({types: t}) => { // eslint-disable-line
               ),
               t.identifier("map")
             ),
-            [t.arrowFunctionExpression(
+            [t.functionExpression(
+              null,
               [t.identifier("i")],
-              maybeCSSModuleExpression(t.identifier("i"), cssmodule)
+              t.blockStatement([
+                t.returnStatement(maybeCSSModuleExpression(t.identifier("i"), cssmodule))
+              ])
             )]
           ),
           t.identifier("join"),
@@ -314,7 +320,7 @@ export default ({types: t}) => { // eslint-disable-line
   };
 
   const buildRequire = template(`
-    const IMPORT_NAME = require(SOURCE);
+    var IMPORT_NAME = require(SOURCE);
   `);
 
   // TODO: template doesn't work for import.

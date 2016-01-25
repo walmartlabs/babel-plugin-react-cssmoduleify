@@ -7,7 +7,9 @@ export default class extends React.Component {
   render() {
     const classes = classname("hello", {
       "world": true
-    }).split(" ").map(i => _cssmodule[i] || i).join(" ");
+    }).split(" ").map(function (i) {
+      return _cssmodule[i] || i;
+    }).join(" ");
 
     const props = {
       className: classes
@@ -22,5 +24,3 @@ export default class extends React.Component {
     return React.createElement("div", props, React.createElement("div", externalProps, "Base test."));
   }
 };
-
-

@@ -42,4 +42,3 @@ describe("babel-plugin-react-cssmoduleify", () => {
     });
   });
 });
-

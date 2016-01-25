@@ -1,6 +1,6 @@
 "use strict";
 
-const _cssmodule = require("path/to/classnames.css");
+var _cssmodule = require("path/to/classnames.css");
 
 var _createClass = function () {
   function defineProperties(target, props) {
@@ -61,7 +61,9 @@ var _class = function (_React$Component) {
       return _react2.default.createElement("div", { className: (0, _classnames2.default)("hello", this.hideable(), {
             "a": true,
             "b": false
-          }).split(" ").map(i => _cssmodule[i] || i).join(" ") }, "Base test.");
+          }).split(" ").map(function (i) {
+            return _cssmodule[i] || i;
+          }).join(" ") }, "Base test.");
     }
   }]);
 
