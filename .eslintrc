@@ -1,0 +1,7 @@
+---
+"parser": "babel-eslint"
+"extends":
+  - "defaults/configurations/walmart/es6-node"
+"rules":
+  "no-console": [0]
+  "valid-jsdoc": [0]
