@@ -3,7 +3,7 @@ import React from "react";
 
 export default class extends React.Component {
   render() {
-    return <div className={`${ _cssmodule["base"] } ${ _cssmodule["compound"] }`}>
+    return <div className={_cssmodule["base"] + " " + (_cssmodule["other"] + " ") + _cssmodule["compound"]}>
       Base test.
     </div>;
   }

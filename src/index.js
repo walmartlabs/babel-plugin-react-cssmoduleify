@@ -42,11 +42,6 @@ const LogOnceImplementation = (fnName, node, path) => {
   }
 };
 
-/**
- * TemplateElement value nodes must be of the shape {raw: string; value: string}
- */
-const templateElementValue = (value) => ({raw: value, cooked: value});
-
 export default ({types: t}) => { // eslint-disable-line
   // by default logging is a noop, but it is configurable
   let logOnce = () => {};
@@ -73,15 +68,20 @@ export default ({types: t}) => { // eslint-disable-line
   };
 
   /**
-   * Generate the required TemplateElements for the following type of template:
+   * Generate the string concat version of the following TemplateElements
    * `${ slot } ${ anotherslot }`
    */
-  const spacedTemplateElements = (count) =>
-    Array.apply(0, Array(count)).map((_, i) =>
-      i === 0 || i === count - 1
-        ? t.templateElement(templateElementValue(""), i === count)
-        : t.templateElement(templateElementValue(" "), false)
-    );
+  const stringConcat = (cssmodule, values) => {
+    const copy = values.slice(0);
+    const first = copy.shift();
+    const concat = (left, right) => {
+      return t.binaryExpression("+", left, right || t.stringLiteral(" "));
+    };
+    return copy.reduce((expr, v, i) => {
+      const cssModule = t.memberExpression(cssmodule, t.stringLiteral(v), true);
+      return concat(expr, (i === copy.length - 1) ? cssModule : concat(cssModule));
+    }, concat(t.memberExpression(cssmodule, t.stringLiteral(first), true)));
+  };
 
   const maybeCSSModuleExpression = (node, cssmodule) =>
     t.logicalExpression(
@@ -98,10 +98,7 @@ export default ({types: t}) => { // eslint-disable-line
       const values = value.node.value.split(" ");
       return values.length === 1
         ? t.memberExpression(cssmodule, t.stringLiteral(values[0]), true)
-        : t.templateLiteral(
-          spacedTemplateElements(values.length + 1),
-          values.map((v) => t.memberExpression(cssmodule, t.stringLiteral(v), true))
-      );
+        : stringConcat(cssmodule, values);
     } else if (t.isIdentifier(value)) {
       // TODO: need to validate what type of node this identifier refers to
       return t.memberExpression(cssmodule, value.node, true);

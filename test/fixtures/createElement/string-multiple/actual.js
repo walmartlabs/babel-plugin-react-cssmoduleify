@@ -4,7 +4,7 @@ export default class extends React.Component {
   render() {
     return React.createElement(
       "div",
-      {className: "base compound"},
+      {className: "base other compound"},
       "Base test."
     );
   }
