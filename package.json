@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-react-cssmoduleify",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Babel plugin to transform traditional classNames to CSS Modules",
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
