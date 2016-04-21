@@ -9,7 +9,7 @@ const BABEL_OPTIONS = {
   presets: [],
   plugins: [
     "syntax-jsx",
-    ["../lib/index.js", {
+    [path.join(__dirname, "..", "lib", "index.js"), {
       "cssmodule": "path/to/classnames.css"
     }]
   ]
