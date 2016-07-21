@@ -78,6 +78,11 @@ export default ({types: t}) => { // eslint-disable-line
       return t.binaryExpression("+", left, right || t.stringLiteral(" "));
     };
     return copy.reduce((expr, v, i) => {
+      // short circuit empty strings. this happens with something like:
+      // {className: "hello " + "world"}
+      if (v === "") {
+        return expr;
+      }
       const cssModule = t.memberExpression(cssmodule, t.stringLiteral(v), true);
       return concat(expr, (i === copy.length - 1) ? cssModule : concat(cssModule));
     }, concat(t.memberExpression(cssmodule, t.stringLiteral(first), true)));
