@@ -32,7 +32,7 @@ var _class = (function (_React$Component) {
     value: function render() {
       return _react2.default.createElement(
         "div",
-        { className: "base" },
+        { className: "base " + "world" },
         "Base test."
       );
     }
